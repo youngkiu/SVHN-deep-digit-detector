@@ -34,12 +34,55 @@ if __name__ == "__main__":
     for img_file in img_files[0:]:
         # 2. image
         img = cv2.imread(img_file)
-        
-        digit_spotter.run(img, threshold=0.5, do_nms=True, nms_threshold=0.1)
 
+        results = [[], []]
+        for i in range(2):
+            if i == 0:
+                image = img
+            else:
+                image = cv2.flip(img, -1)
 
+            bbs, probs, y_preds = digit_spotter.run(image, threshold=0.5, do_nms=True, show_result=False, nms_threshold=0.1)
+            results[i] = [bbs, probs, y_preds]
+            for bb, prob, y_pred in zip(bbs, probs, y_preds):
+                print img_file, i, bb, prob, y_pred
 
+        threshold = 0.85
+        if sum(prob >= threshold for prob in results[0][1]) == sum(prob >= threshold for prob in results[1][1]):
+            if np.mean(results[0][1]) < np.mean(results[1][1]):
+                i = 1
+            else:
+                i = 0
+        elif sum(prob >= threshold for prob in results[0][1]) < sum(prob >= threshold for prob in results[1][1]):
+            i = 1
+        else:
+            i = 0
 
+        print i
+        if i == 0:
+            image = img
+        else:
+            image = cv2.flip(img, -1)
 
+        digit_dic = {}
+        bbs, probs, y_preds = results[i]
+        for bb, prob, y_pred in zip(bbs, probs, y_preds):
+            if prob < threshold:
+                continue
 
+            image = show.draw_box(image, bb, 2)
+
+            y1, y2, x1, x2 = bb
+            msg = "{0}".format(y_pred)
+            cv2.putText(image, msg, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), thickness=2)
+
+            digit_dic[x1] = y_pred
+
+        sorted_list = sorted(digit_dic.items(), key=operator.itemgetter(0))
+        digit_list = [item[1] for item in sorted_list]
+
+        print 'Predict', os.path.basename(img_file), digit_list
+
+        cv2.imshow("MSER + CNN", image)
+        # cv2.waitKey(0)
 
