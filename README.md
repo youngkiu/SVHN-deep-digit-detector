@@ -1,3 +1,5 @@
+https://towardsdatascience.com/build-a-multi-digit-detector-with-keras-and-opencv-b97e3cd3b37
+
 # SVHN-deep-cnn-digit-detector
 
 This project implements deep-cnn-detector (and recognizer) in natural scene. I used keras framework and opencv library to build the detector.
